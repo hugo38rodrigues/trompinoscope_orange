@@ -1,2 +1,6 @@
 __pycache__
 .venv
+trombinoscope.pdf
+pages/*
+photos/*
+.vscode/launch.json

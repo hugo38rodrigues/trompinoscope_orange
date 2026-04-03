@@ -9,9 +9,12 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 from reportlab.lib.pagesizes import A3
 import requests
+import urllib3
 from People import People
 import time
 from urllib.parse import urljoin
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 VALIDATION_EXTERN_EMAIL = r'\.ext(?=@)'
 
@@ -162,33 +165,34 @@ def sendId(urlsId: Union [str]) -> Union[People]:
     people: Union[People] = []
 
     for urlId in urlsId:
-        response = requests.get(urlId)
-        with open(response.text, "r", encoding="utf-8") as f:
-            soup = BeautifulSoup(f, "html.parser")
-            
-            for section in soup.find_all("section", id="personDetails"):
-                # Nom / Prénom
-                h2 = section.find(id="pphCivilitySnGnText")
-                if h2:
-                    # Récupération du nom dans le text et la span
-                    nom_span = h2.find("span", class_="nameFormat")
-                    nom = nom_span.get_text(strip=True) if nom_span else ""
+        response = requests.get(urlId, verify=False)
+        body = response.text.replace("\r\n", "").replace("\t", "")
 
-                    # Le prénom est dans le texte brut avant le span
-                    parts = h2.find(string=True, recursive=False).strip().split()
-                    prenom = parts[1] if len(parts) > 1 else ""
-                    
-                    photo_img = section.find("img", id="pphPhoto")
+        soup = BeautifulSoup(body, "html.parser")
+        
+        for section in soup.find_all("section", id="personDetails"):
+            # Nom / Prénom
+            h2 = section.find(id="pphCivilitySnGnText")
+            if h2:
+                # Récupération du nom dans le text et la span
+                nom_span = h2.find("span", class_="nameFormat")
+                nom = nom_span.get_text(strip=True) if nom_span else ""
 
-                    if photo_img:
-                        photo_url = urljoin(urlsId, photo_img["src"])
-                        response = requests.get(photo_url)
-                        if response.status_code == 200:
-                            # Sauvegarder en fichier
-                            with open(f"{prenom}_{nom}.jpg", "wb") as f:
-                                f.write(response.content)
+                # Le prénom est dans le texte brut avant le span
+                parts = h2.find(string=True, recursive=False).strip().split()
+                prenom = parts[1] if len(parts) > 1 else ""
+                
+                photo_img = section.find("img", id="pphPhoto")
+
+                if photo_img:
+                    photo_url = urljoin(urlId, photo_img["src"])
+                    response = requests.get(photo_url, verify=False)
+                    if response.status_code == 200:
+                        # Sauvegarder en fichier
+                        with open(f"./photos/{prenom}_{nom}.jpg", "wb") as f:
+                            f.write(response.content)
         time.sleep(1)
-    people.append(People(firstName= prenom, lastName=nom, picture="response.content"))
+        people.append(People(firstName= prenom, lastName=nom, picture=f"./photos/{prenom}_{nom}.jpg"))
 
     return people
 
