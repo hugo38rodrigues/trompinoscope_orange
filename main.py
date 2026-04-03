@@ -1,11 +1,11 @@
 from typing import Union
 from bs4 import BeautifulSoup
 import re
-from reportlab.lib.units import cm, mm
+from reportlab.lib.units import cm
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 import os
 from reportlab.lib.pagesizes import A3
 import requests
@@ -42,27 +42,27 @@ COLOR_TITLE = HexColor("#2c3e50")
 COLOR_NAME = HexColor("#333333")
 COLOR_LINE = HexColor("#2c3e50")
 
-def create_placeholder(width_px, height_px):
-    """Placeholder simple avec silhouette."""
-    img = Image.new("RGB", (width_px, height_px), color=(230, 230, 230))
-    draw = ImageDraw.Draw(img)
-    cx, cy = width_px // 2, height_px // 2
-    r = int(width_px * 0.17)
-    head_y = cy - int(height_px * 0.1)
-    draw.ellipse([cx - r, head_y - r, cx + r, head_y + r], fill=(180, 180, 180))
-    bw = int(width_px * 0.32)
-    bt = head_y + r + int(height_px * 0.02)
-    bb = cy + int(height_px * 0.35)
-    draw.ellipse([cx - bw, bt, cx + bw, bb], fill=(180, 180, 180))
-    path = "/tmp/placeholder.png"
-    img.save(path)
-    return path
+# def create_placeholder(width_px, height_px):
+#     """Placeholder simple avec silhouette."""
+#     img = Image.new("RGB", (width_px, height_px), color=(230, 230, 230))
+#     draw = ImageDraw.Draw(img)
+#     cx, cy = width_px // 2, height_px // 2
+#     r = int(width_px * 0.17)
+#     head_y = cy - int(height_px * 0.1)
+#     draw.ellipse([cx - r, head_y - r, cx + r, head_y + r], fill=(180, 180, 180))
+#     bw = int(width_px * 0.32)
+#     bt = head_y + r + int(height_px * 0.02)
+#     bb = cy + int(height_px * 0.35)
+#     draw.ellipse([cx - bw, bt, cx + bw, bb], fill=(180, 180, 180))
+#     path = "/tmp/placeholder.png"
+#     img.save(path)
+#     return path
 
 
 def build_pdf(peoples, output_path):
     c = canvas.Canvas(output_path, pagesize=A3)
-    placeholder_path = create_placeholder(300, 400)
-    placeholder_img = ImageReader(placeholder_path)
+    # placeholder_path = create_placeholder(300, 400)
+    placeholder_img = ImageReader(people.picture)
 
     card_w = PHOTO_W + 2 * PADDING_CARD
     card_h = PHOTO_H + 2 * PADDING_CARD + 1.8 * cm
@@ -133,8 +133,8 @@ def build_pdf(peoples, output_path):
         c.showPage()
 
     c.save()
-    if os.path.exists(placeholder_path):
-        os.remove(placeholder_path)
+    # if os.path.exists(placeholder_path):
+    #     os.remove(placeholder_path)
     print(f"PDF créé : {output_path}")
 
 
