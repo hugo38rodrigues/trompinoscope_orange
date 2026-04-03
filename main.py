@@ -13,8 +13,8 @@ import urllib3
 from People import People
 import time
 from urllib.parse import urljoin
+import sys
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 VALIDATION_EXTERN_EMAIL = r'\.ext(?=@)'
 
@@ -159,30 +159,39 @@ def searchURL() -> Union [str]:
                 urlsId.append(a.get("href"))
     return urlsId
 
-def sendId(urlsId: Union [str]) -> Union[People]:
-
-    people: Union[People] = []
+def getDetailsPage(urlsId: Union [str]) -> Union[str]:
+    detailsPagesList = []
+    
 
     for urlId in urlsId:
         response = requests.get(urlId, verify=False)
         body = response.text.replace("\r\n", "").replace("\t", "")
+        detailsPagesList.append(body)
+    return detailsPagesList
+        
 
-        soup = BeautifulSoup(body, "html.parser")
+def getPeopleInDetailsPage (detailsPagesList:list[str]) -> Union[People]:
+
+    people: Union[People] = []
+    
+    for detailsPage in detailsPagesList:
         nom: str=""
         prenom: str=""
+        soup = BeautifulSoup(detailsPage, "html.parser")
+            
         for section in soup.find_all("section", id="personDetails"):
-            # Nom / Prénom
-            h2 = section.find(id="pphCivilitySnGnText")
-            if h2:
-                # Récupération du nom dans le text et la span
-                nom_span = h2.find("span", class_="nameFormat")
-                nom = nom_span.get_text(strip=True) if nom_span else ""
+                # Nom / Prénom
+                h2 = section.find(id="pphCivilitySnGnText")
+                if h2:
+                    # Récupération du nom dans le text et la span
+                    nom_span = h2.find("span", class_="nameFormat")
+                    nom = nom_span.get_text(strip=True) if nom_span else ""
 
-                # Le prénom est dans le texte brut avant le span
-                parts = h2.find(string=True, recursive=False).strip().split()
-                prenom = parts[1] if len(parts) > 1 else ""
-                
-                photo_img = section.find("img", id="pphPhoto")
+                    # Le prénom est dans le texte brut avant le span
+                    parts = h2.find(string=True, recursive=False).strip().split()
+                    prenom = parts[1] if len(parts) > 1 else ""
+                    
+                    photo_img = section.find("img", id="pphPhoto")
 
                 user_id = urlId.split("/")[-1]
 
@@ -198,14 +207,28 @@ def sendId(urlsId: Union [str]) -> Union[People]:
 
     return people
 
-
-
-
 if __name__ == "__main__":
-    urlsId: Union[str] = searchURL()
-    peoples: [People] = sendId(urlsId) # type: ignore
-    for people in peoples:
-        print(f"{people.firstName} {people.lastName} {people.picture}")
-    build_pdf(peoples, OUTPUT_PATH)
+
+    if len(sys.argv) > 1:
+        choix = sys.argv[1]
+
+        if choix == "1":
+            detailPagesList = []
+            for filename in os.listdir("./detailsPages"):
+                if not filename.endswith(".html"):
+                    continue
+
+                filepath = os.path.join("./detailsPages", filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    detailPagesList.add(filepath)
+            peoples: People = getDetailsPage(detailPagesList)
+            build_pdf(peoples, OUTPUT_PATH)
+            # ton code ici
+    else:
+        urlsId: Union[str] = searchURL()
+        peoples: [People] = getDetailsPage(urlsId) # type: ignore
+        for people in peoples:
+            print(f"{people.firstName} {people.lastName}")
+        build_pdf(peoples, OUTPUT_PATH)
 
 
