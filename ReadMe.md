@@ -38,8 +38,9 @@ python main.py
 ```
 trompinoscope_orange/
 ├── main.py          # Script principal
+├── photos           # Dossier pour stocker les photos récupérer
 ├── People.py        # Modèle de données People
-├── requirements.txt
+├── requirements.txt 
 ├── pages            # Mettre les pages récupérées 
 └── README.md
 ```
