@@ -219,11 +219,11 @@ if __name__ == "__main__":
 
         if choix == "1":
             detailPagesList = []
-            for filename in os.listdir("./detailsPages"):
+            for filename in os.listdir("./detail_pages"):
                 if not filename.endswith(".html"):
                     continue
 
-                filepath = os.path.join("./detailsPages", filename)
+                filepath = os.path.join("./detail_pages", filename)
                 with open(filepath, "r", encoding="utf-8") as f:
                     detailPagesList.add(filepath)
             peoples: People = getDetailsPage(detailPagesList)
