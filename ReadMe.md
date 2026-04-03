@@ -8,6 +8,7 @@ Ce script récupère automatiquement les informations des collaborateurs (nom, p
 - Python 3.10+
 - Accès au réseau interne Orange (VPN ou poste connecté)
 - Accès à l'Annuaire Groupe (`annuaire-sec.sso.infra.ftgroup`)
+- Remplir les dossiers 'pages' et 'detailsPages' avec les pages html.
 
 ## Installation
 
@@ -30,8 +31,13 @@ pip install -r requirements.txt
 ```
 
 ## Utilisation
+Dans le cas où vous avez beaucoup de personne sur les pages
 ```bash
 python main.py
+```
+Dans le cas ou vous avez que une personne
+```bash
+python main.py 1 
 ```
 
 ## Structure du projet
