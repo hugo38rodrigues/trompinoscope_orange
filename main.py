@@ -198,6 +198,8 @@ def getPeopleInDetailsPage (detailsPagesList:list[str]) -> Union[People]:
 
                 user_id = urlId.split("/")[-1]
 
+                user_id = urlId.split("/")[-1]
+
                 if photo_img:
                     photo_url = urljoin(urlId, photo_img["src"])
                     response = requests.get(photo_url, verify=False)
@@ -231,7 +233,7 @@ if __name__ == "__main__":
         urlsId: Union[str] = searchURL()
         peoples: [People] = getDetailsPage(urlsId) # type: ignore
         for people in peoples:
-            print(f"{people.firstName} {people.lastName}")
+            print(f"{people.firstName} {people.lastName} {people.picture}")
         build_pdf(peoples, OUTPUT_PATH)
 
 
