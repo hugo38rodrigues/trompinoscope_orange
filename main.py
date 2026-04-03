@@ -61,8 +61,6 @@ COLOR_LINE = HexColor("#2c3e50")
 
 def build_pdf(peoples, output_path):
     c = canvas.Canvas(output_path, pagesize=A3)
-    # placeholder_path = create_placeholder(300, 400)
-    placeholder_img = ImageReader(people.picture)
 
     card_w = PHOTO_W + 2 * PADDING_CARD
     card_h = PHOTO_H + 2 * PADDING_CARD + 1.8 * cm
@@ -112,6 +110,7 @@ def build_pdf(peoples, output_path):
             # Photo
             photo_x = card_x + PADDING_CARD
             photo_y = card_y + PADDING_CARD + 1.8 * cm
+            placeholder_img = ImageReader(person.picture)
             c.drawImage(placeholder_img, photo_x, photo_y, PHOTO_W, PHOTO_H,
                         preserveAspectRatio=True, mask="auto")
 
@@ -169,7 +168,8 @@ def sendId(urlsId: Union [str]) -> Union[People]:
         body = response.text.replace("\r\n", "").replace("\t", "")
 
         soup = BeautifulSoup(body, "html.parser")
-        
+        nom: str=""
+        prenom: str=""
         for section in soup.find_all("section", id="personDetails"):
             # Nom / Prénom
             h2 = section.find(id="pphCivilitySnGnText")
@@ -184,15 +184,17 @@ def sendId(urlsId: Union [str]) -> Union[People]:
                 
                 photo_img = section.find("img", id="pphPhoto")
 
+                user_id = urlId.split("/")[-1]
+
                 if photo_img:
                     photo_url = urljoin(urlId, photo_img["src"])
                     response = requests.get(photo_url, verify=False)
                     if response.status_code == 200:
                         # Sauvegarder en fichier
-                        with open(f"./photos/{prenom}_{nom}.jpg", "wb") as f:
+                        with open(f"./photos/{user_id}.jpg", "wb") as f:
                             f.write(response.content)
         time.sleep(1)
-        people.append(People(firstName= prenom, lastName=nom, picture=f"./photos/{prenom}_{nom}.jpg"))
+        people.append(People(firstName=prenom, lastName=nom, picture=f"./photos/{user_id}.jpg"))
 
     return people
 
@@ -203,7 +205,7 @@ if __name__ == "__main__":
     urlsId: Union[str] = searchURL()
     peoples: [People] = sendId(urlsId) # type: ignore
     for people in peoples:
-        print(f"{people.firstName} {people.lastName}")
+        print(f"{people.firstName} {people.lastName} {people.picture}")
     build_pdf(peoples, OUTPUT_PATH)
 
 
