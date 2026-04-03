@@ -162,7 +162,6 @@ def searchURL() -> Union [str]:
 def getDetailsPage(urlsId: Union [str]) -> Union[str]:
     detailsPagesList = []
     
-
     for urlId in urlsId:
         response = requests.get(urlId, verify=False)
         body = response.text.replace("\r\n", "").replace("\t", "")
@@ -179,6 +178,10 @@ def getPeopleInDetailsPage (detailsPagesList:list[str]) -> Union[People]:
         prenom: str=""
         soup = BeautifulSoup(detailsPage, "html.parser")
             
+
+        soup = BeautifulSoup(body, "html.parser")
+        nom: str=""
+        prenom: str=""
         for section in soup.find_all("section", id="personDetails"):
                 # Nom / Prénom
                 h2 = section.find(id="pphCivilitySnGnText")
