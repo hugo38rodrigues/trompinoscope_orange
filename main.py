@@ -137,9 +137,14 @@ def build_pdf(peoples, output_path):
 
 def searchURL() -> Union [str]:
     urlsId: Union[str] = []
+    
+    for filename in os.listdir("./pages"):
+        if not filename.endswith(".html"):
+            continue
 
-    with open("page_r.html", "r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, "html.parser")
+        filepath = os.path.join("./pages", filename)
+        with open(filepath, "r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f, "html.parser")
 
     # Toutes les <ul class="media-list">
     for ul in soup.find_all("ul", class_="media-list"):
@@ -153,12 +158,12 @@ def searchURL() -> Union [str]:
     return urlsId
 
 def sendId(urlsId: Union [str]) -> Union[People]:
-    
+
     people: Union[People] = []
 
     for urlId in urlsId:
         response = requests.get(urlId)
-        with open("page_details.html", "r", encoding="utf-8") as f:
+        with open(response.text, "r", encoding="utf-8") as f:
             soup = BeautifulSoup(f, "html.parser")
             
             for section in soup.find_all("section", id="personDetails"):
