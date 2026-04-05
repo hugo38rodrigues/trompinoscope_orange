@@ -1,0 +1,110 @@
+from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.pagesizes import A3
+
+# from PIL import Image, ImageDraw
+
+from person import Person
+
+# --- CONFIG ---
+OUTPUT_PATH = "trombinoscope.pdf"
+PAGE_WIDTH, PAGE_HEIGHT = A3  # 29.7 x 42 cm
+
+# Grid: 4 columns x 4 rows
+COLS = 4
+ROWS = 4
+
+# Photo dimensions
+PHOTO_W = 4.5 * cm
+PHOTO_H = 6 * cm
+
+# Margin (space between cards) and Padding (inner card space)
+MARGIN_CARD = 0.5 * cm
+PADDING_CARD = 0.5 * cm
+
+# Page margins
+MARGIN_TOP = 3.5 * cm
+
+# Colors
+COLOR_TITLE = HexColor("#2c3e50")
+COLOR_NAME = HexColor("#333333")
+COLOR_LINE = HexColor("#2c3e50")
+
+def build_pdf(peoples):
+    c = canvas.Canvas(OUTPUT_PATH, pagesize=A3)
+
+    card_w = PHOTO_W + 2 * PADDING_CARD
+    card_h = PHOTO_H + 2 * PADDING_CARD + 1.8 * cm
+
+    # Center the grid horizontally
+    grid_w = COLS * card_w + (COLS - 1) * MARGIN_CARD
+    margin_left = (PAGE_WIDTH - grid_w) / 2
+
+    per_page = COLS * ROWS
+    total_pages = (len(peoples) + per_page - 1) // per_page
+
+    for page_num in range(total_pages):
+
+        # --- Simple header ---
+        title_y = PAGE_HEIGHT - 2 * cm
+        c.setFillColor(COLOR_TITLE)
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(PAGE_WIDTH / 2, title_y, "Trombinoscope")
+
+        # Line below the title
+        line_y = title_y - 0.4 * cm
+        c.setStrokeColor(COLOR_LINE)
+        c.setLineWidth(1.5)
+        c.line(PAGE_WIDTH / 2 - 4 * cm, line_y, PAGE_WIDTH / 2 + 4 * cm, line_y)
+
+        # Page number
+        c.setFont("Helvetica", 9)
+        c.setFillColor(HexColor("#999999"))
+        c.drawCentredString(PAGE_WIDTH / 2, line_y - 0.6 * cm, f"Page {page_num + 1} / {total_pages}")
+
+        # --- Grid ---
+        start_idx = page_num * per_page
+        page_people: list[Person] = peoples[start_idx: start_idx + per_page]
+
+        for i, person in enumerate(page_people):
+            col = i % COLS
+            row = i // COLS
+
+            card_x = margin_left + col * (card_w + MARGIN_CARD)
+            card_y = PAGE_HEIGHT - MARGIN_TOP - (row + 1) * card_h - row * MARGIN_CARD
+
+            # Thin border
+            c.setStrokeColor(HexColor("#cccccc"))
+            c.setLineWidth(0.5)
+            c.rect(card_x, card_y, card_w, card_h, fill=0, stroke=1)
+
+            # Photo
+            photo_x = card_x + PADDING_CARD
+            photo_y = card_y + PADDING_CARD + 1.8 * cm
+            placeholder_img = ImageReader(person.getPicture())
+            c.drawImage(placeholder_img, photo_x, photo_y, PHOTO_W, PHOTO_H,
+                        preserveAspectRatio=True, mask="auto")
+
+            # First name
+            center_x = card_x + card_w / 2
+            c.setFillColor(COLOR_NAME)
+            c.setFont("Helvetica", 10)
+            c.drawCentredString(center_x, card_y + PADDING_CARD + 0.8 * cm, person.getFirstName())
+
+            # Last name in uppercase
+            c.setFont("Helvetica-Bold", 10)
+            c.drawCentredString(center_x, card_y + PADDING_CARD + 0.2 * cm, person.getLastName().upper())
+
+        # --- Footer ---
+        c.setFillColor(HexColor("#aaaaaa"))
+        c.setFont("Helvetica", 7)
+        c.drawCentredString(PAGE_WIDTH / 2, 1 * cm, "Document interne")
+
+        c.showPage()
+
+    c.save()
+    # if os.path.exists(placeholder_path):
+    #     os.remove(placeholder_path)
+    print(f"PDF created: {OUTPUT_PATH}")
