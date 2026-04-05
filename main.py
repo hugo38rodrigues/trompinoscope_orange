@@ -42,6 +42,8 @@ COLOR_TITLE = HexColor("#2c3e50")
 COLOR_NAME = HexColor("#333333")
 COLOR_LINE = HexColor("#2c3e50")
 
+DIRECTORY_URL = "https://annuaire-sec.sso.infra.ftgroup"
+
 # def create_placeholder(width_px, height_px):
 #     """Simple placeholder with silhouette."""
 #     img = Image.new("RGB", (width_px, height_px), color=(230, 230, 230))
@@ -136,31 +138,43 @@ def build_pdf(peoples, output_path):
     #     os.remove(placeholder_path)
     print(f"PDF created: {output_path}")
 
-def extractURLIDFromDetailPage(detailPage: str) -> str:
+def extractURLIDFromResultSearchPage(detailPage: str) -> list[str]:
+    urlsIdList: list[str] = []
+
+    # Structure of the page:
+    # <ul class="media-list">
+    #   <li class="media">
+    #     <a class="pull-left" href="https://example.com/detail/123">
+    #       <img src="photo.jpg" data-lync="
+    #       <span class="nameFormat">Doe</span> John">
+    #     </a>
+
     # All <ul class="media-list">    
     for ul in detailPage.find_all("ul", class_="media-list"):
         # In each ul, all <a class="pull-left">
         for a in ul.find_all("a", class_="pull-left"):
             email = a.contents[1].get("data-lync").strip()
             if re.search(VALIDATION_EXTERN_EMAIL, email):
+                print (f" - Ignore external email: {email}")
                 pass
             else :
-                url = a.get("href")
-                print(f" - URL found: {url}")
-                return url
-    return ""
+                urlId = a.get("href")
+                print (f" - Valid email found: {email}, {urlId}")
+                urlsIdList.append(urlId)
+
+    return urlsIdList
 
 def extractPersonIDFromDetailPage(detailPage: str) -> str:
     # All <ul class="media-list">    
-    for a in detailPage.find_all("a", id="pphOpenModalAskUpdateButton"):
-        id = a.get("href").split("/")[-1]
+    for img in detailPage.find_all("img", id="pphPhoto"):
+        id = img.get("src").split("/")[2]
         print(f" - ID found: {id}")
         return id
 
 def extractDetailPageURLs() -> list[str]:
     '''Extracts detail page URLs from local HTML files.'''
-    urlsId: list[str] = []
-    url:str = ""
+    urlsIdList: list[str] = []
+    urlId:str = ""
     
     print("Searching for detail page URLs...")
     for filename in os.listdir("./pages"):
@@ -172,10 +186,9 @@ def extractDetailPageURLs() -> list[str]:
         with open(filepath, "r", encoding="utf-8") as f:
             page = BeautifulSoup(f, "html.parser")
 
-        url = extractURLIDFromDetailPage(page)
-        urlsId.append(url)
+        urlsIdList.extend(extractURLIDFromResultSearchPage(page))   
 
-    return urlsId
+    return urlsIdList
 
 def getPersonListFromDetailPageUrls(urlsId: list[str]) -> list[Person]:
     personList: list[Person] = []
@@ -235,21 +248,22 @@ def extractPersonFromDetailPage (detailPage: str) -> Person:
             parts = h2.find(string=True, recursive=False).strip().split()
             prenom = parts[1] if len(parts) > 1 else ""
             
-            photo_img = section.find("img", id="pphPhoto")
+            id = section.find("img", id="pphPhoto").get("src").split("/")[2]
 
-        user_id = extractPersonIDFromDetailPage(page)
+        # user_id = extractPersonIDFromDetailPage(page)
         # user_id = urlId.split("/")[-1]
 
-        if photo_img:
-            photo_url = urljoin(urlId, photo_img["src"])
+
+        if id:
+            photo_url = urljoin(DIRECTORY_URL, f"/persons/{id}/photo")
             response = requests.get(photo_url, verify=False)
             if response.status_code == 200:
                 # Save to file
-                with open(f"./photos/{user_id}.jpg", "wb") as f:
+                with open(f"./photos/{id}.jpg", "wb") as f:
                     f.write(response.content)
                     
     time.sleep(1)
-    person = Person(firstName=prenom, lastName=nom, picture=f"./photos/{user_id}.jpg")
+    person = Person(firstName=prenom, lastName=nom, picture=f"./photos/{id}.jpg", id=id)
 
     return person
 
@@ -261,15 +275,15 @@ if __name__ == "__main__":
 
     print("Generating the trombinoscope...")
 
-    urlsId: list[str]
-    urlsId = extractDetailPageURLs()
-    personList = getPersonListFromDetailPageUrls(urlsId)
+    urlsIdList: list[str]
+    urlsIdList = extractDetailPageURLs()
+    personList = getPersonListFromDetailPageUrls(urlsIdList)
 
-    print("Check for provided detail pages...")
-    personList.extend(getPersonListFromDetailPages())
+    # print("Check for provided detail pages...")
+    # personList.extend(getPersonListFromDetailPages())
 
     print("People found:")
     for person in personList:
-        print(f" - {person.firstName} {person.lastName} {person.picture}")
+        print(f" - {person}")
         
     build_pdf(personList, OUTPUT_PATH)
