@@ -5,19 +5,26 @@ DIRECTORY_URL = "https://annuaire-sec.sso.infra.ftgroup"
 VALIDATION_EXTERN_EMAIL = r'\.ext(?=@)'
 
 class Person:
+    _gender: str
     _firstName: str
     _lastName: str
+    _email: str
     _id: str
     _picture: str
 
     def __init__(self) -> None:
+        self._gender = ""
         self._firstName = ""
         self._lastName = ""
+        self._email = ""
         self._picture = ""
         self._id = ""
         
     def __str__(self):
-        return f"{self._firstName} {self._lastName} ({self._id})"
+        return f"{self._gender} {self._firstName} {self._lastName} {'EXTERNAL ' if not self.isInternal() else ''}({self._id})"
+    
+    def getGender(self) -> str:
+        return self._gender
     
     def getLastName(self) -> str:
         return self._lastName
@@ -31,6 +38,12 @@ class Person:
     def getId(self) -> str:
         return self._id
     
+    def getEmail(self) -> str:
+        return self._email
+    
+    def setGender(self, gender: str) -> None:
+        self._gender = gender
+        
     def setLastName(self, lastName: str) -> None:
         self._lastName = lastName
     
@@ -39,6 +52,12 @@ class Person:
     
     def setId(self, id: str) -> None:
         self._id = id
+
+    def setEmail(self, email: str) -> None:
+        self._email = email
+
+    def isInternal(self) -> bool:
+        return re.search(VALIDATION_EXTERN_EMAIL, self._email) is None
 
     def getPhotoUrl(self) -> str:
         return f"{DIRECTORY_URL}/persons/{self._id}/photo"
@@ -50,7 +69,3 @@ class Person:
                 f.write(response.content)
         else:
             print(f"Failed to download photo for {self._id}, status code: {response.status_code}")
-    
-    @staticmethod
-    def checkValidEmail(email: str) -> bool:
-        return re.search(VALIDATION_EXTERN_EMAIL, email)

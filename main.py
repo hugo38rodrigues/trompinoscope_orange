@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 import os
 import requests
 import urllib3
@@ -6,6 +5,7 @@ from person import Person
 import time
 from urllib.parse import urljoin
 import trombinoscope as trombi
+import search_page as sp
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -52,23 +52,21 @@ def extractURLIDFromResultSearchPage(detailPage: str) -> list[str]:
 
     return urlsIdList
 
-def extractDetailPageURLs() -> list[str]:
-    '''Extracts detail page URLs from local HTML files.'''
-    urlsIdList: list[str] = []
+def extractPersonsFromSearchPages() -> list[Person]:
+    '''Extracts Persons from local HTML files.'''
+    personList: list[Person] = []
     
-    print("Searching for detail page URLs...")
+    print("Looking into search pages...")
     for filename in os.listdir("./pages"):
         if not filename.endswith(".html"):
             continue
 
         print(f" - Processing file: {filename}")
         filepath = os.path.join("./pages", filename)
-        with open(filepath, "r", encoding="utf-8") as f:
-            page = BeautifulSoup(f, "html.parser")
+        searchPage = sp.SearchPage(filepath)
 
-        urlsIdList.extend(extractURLIDFromResultSearchPage(page))   
-
-    return urlsIdList
+        personList.extend(searchPage.getPersonList())
+    return personList
 
 def getPersonListFromDetailPageUrls(urlsId: list[str]) -> list[Person]:
     personList: list[Person] = []
@@ -152,10 +150,7 @@ if __name__ == "__main__":
     personList: list[Person] = []
 
     print("Generating the trombinoscope...")
-
-    urlsIdList: list[str]
-    urlsIdList = extractDetailPageURLs()
-    personList = getPersonListFromDetailPageUrls(urlsIdList)
+    personList.extend(extractPersonsFromSearchPages())
 
     # print("Check for provided detail pages...")
     # personList.extend(getPersonListFromDetailPages())
@@ -163,5 +158,7 @@ if __name__ == "__main__":
     print("People found:")
     for person in personList:
         print(f" - {person}")
+        time.sleep(0.5)         # Limit API calls
+        person.savePhoto()
         
     trombi.build_pdf(personList)
