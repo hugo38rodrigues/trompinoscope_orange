@@ -21,11 +21,13 @@ from person import Person
 # </div>
 
 class SearchPage:
-    _htmlCode: BeautifulSoup
+    _htmlCode: BeautifulSoup = None
     _personList: list[Person] = []
 
     def __init__(self, filepath: str):
         '''Initializes the SearchPage object by loading the search page HTML code from a file.'''
+        self._htmlCode = None
+        self._personList = []
         self._loadSearchPage(filepath)
         self._searchPersons()
 

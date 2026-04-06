@@ -5,7 +5,7 @@ from person import Person
 import time
 from urllib.parse import urljoin
 import trombinoscope as trombi
-import search_page as sp
+from search_page import SearchPage
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -63,7 +63,7 @@ def extractPersonsFromSearchPages() -> list[Person]:
 
         print(f" - Processing file: {filename}")
         filepath = os.path.join("./pages", filename)
-        searchPage = sp.SearchPage(filepath)
+        searchPage = SearchPage(filepath)
 
         personList.extend(searchPage.getPersonList())
     return personList
