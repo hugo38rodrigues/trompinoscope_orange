@@ -44,7 +44,7 @@ class SearchPage:
         '''Extracts the list of Person objects from the search page HTML code.'''
         for div in self._htmlCode.find_all("div", class_="div-infos-details"):
             person = self._extractPersonFromResultSearchPage(div)
-            print (f" - Person extracted: {person}")
+            print (f"   - {person}")
             if person.isInternal():
                 self._personList.append(person)
 
@@ -59,12 +59,12 @@ class SearchPage:
             # The id is stored in the "href" attribute of the "a" tag
             person.setId(a.get("href").split("/")[-1])
     
-        # Extract Firstname, Lastname
+        # Extract Gender, Firstname, Lastname
         for h3 in div.find_all("h3", class_="media-heading"):
             # The firstname and lastname are stored in the "a" tag inside the "h3" tag
             name = h3.find("a").text.strip().split(" ")
             person.setGender(name[0])
-            person.setFirstName(name[1])
-            person.setLastName(name[2])
+            person.setFirstName(name[2])
+            person.setLastName(name[1])
         
         return person

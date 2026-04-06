@@ -107,4 +107,4 @@ def build_pdf(peoples):
     c.save()
     # if os.path.exists(placeholder_path):
     #     os.remove(placeholder_path)
-    print(f"PDF created: {OUTPUT_PATH}")
+    print(f"\nPDF created: {OUTPUT_PATH}")

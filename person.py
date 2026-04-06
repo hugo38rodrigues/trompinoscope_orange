@@ -17,8 +17,8 @@ class Person:
         self._firstName = ""
         self._lastName = ""
         self._email = ""
-        self._picture = ""
         self._id = ""
+        self._picture = ""
         
     def __str__(self):
         return f"{self._gender} {self._firstName} {self._lastName} {'EXTERNAL ' if not self.isInternal() else ''}({self._id})"
