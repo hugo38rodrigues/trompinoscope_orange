@@ -18,6 +18,7 @@ from person import Person
 # 			<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=Orange,ou=entities" data-hasqtip="0">Orange</a>/<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=OF,ou=Orange,ou=entities" data-hasqtip="1">OF</a>/<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=DSI,ou=OF,ou=Orange,ou=entities" data-hasqtip="2">DSI</a>/<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=DB2B,ou=DSI,ou=OF,ou=Orange,ou=entities" data-hasqtip="3">DB2B</a>/<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=MOBILITE,ou=DB2B,ou=DSI,ou=OF,ou=Orange,ou=entities" data-hasqtip="4">MOBILITE</a>/<a class="entityclass" href="https://annuaire-sec.sso.infra.ftgroup/entities/ou=CCM,ou=MOBILITE,ou=DB2B,ou=DSI,ou=OF,ou=Orange,ou=entities" data-hasqtip="5">CCM</a>
 # 		</div>
 # 	</div>
+#   <p> class="poste">Function</p>
 # </div>
 
 class SearchPage:
@@ -45,7 +46,7 @@ class SearchPage:
         for div in self._htmlCode.find_all("div", class_="div-infos-details"):
             person = self._extractPersonFromResultSearchPage(div)
             print (f"   - {person}")
-            if person.isInternal():
+            if person.isInternal() and not person.isTPS():
                 self._personList.append(person)
 
     def _extractPersonFromResultSearchPage(self, div: str) -> Person:
@@ -59,12 +60,35 @@ class SearchPage:
             # The id is stored in the "href" attribute of the "a" tag
             person.setId(a.get("href").split("/")[-1])
     
+        # Extract function
+        for p in div.find_all("p", class_="poste"):
+            # The function is stored in the text of the "p" tag
+            person.setFunction(p.text.strip())
+
         # Extract Gender, Firstname, Lastname
         for h3 in div.find_all("h3", class_="media-heading"):
             # The firstname and lastname are stored in the "a" tag inside the "h3" tag
-            name = h3.find("a").text.strip().split(" ")
-            person.setGender(name[0])
-            person.setFirstName(name[2])
-            person.setLastName(name[1])
-        
+            name = h3.find("a")
+           
+            last_name = ""
+            first_names = ""
+            gender = ""
+            
+            for content in name.contents:
+                if isinstance(content, str):
+                    text = content.strip()
+                    if not last_name:  # before the name span
+                        gender = text
+                    else:  # after the name span
+                        first_names += text + " "
+                elif content.name == 'span' and 'nameFormat' in content.get('class', []):
+                    last_name = content.text.strip()
+            
+            first_names = first_names.strip()
+            
+            # Set the values
+            person.setGender(gender if gender.startswith(("M.", "Mme", "Mr", "Mrs")) else "")
+            person.setLastName(last_name)
+            person.setFirstName(first_names)
+
         return person

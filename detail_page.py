@@ -6,6 +6,7 @@ from person import Person
 #   <h2 id="pphCivilitySnGnText">M. John<span class="nameFormat">Doe</span></h2>
 #   <img id="pphPhoto"data-lync="email">
 #   <a id="pphSignetButton" data-source="xxxxxxxxxxxx">
+#   <p id="pphPosteText">Function</p>
 # </section>
 
 class DetailPage:
@@ -33,7 +34,7 @@ class DetailPage:
         for section in self._htmlCode.find_all("section", id="personDetails"):
             person = self._extractPersonFromDetailPage(section)
             print (f"   - {person}")
-            if person.isInternal():
+            if person.isInternal() and not person.isTPS():
                 self._personList.append(person)
 
     def _extractPersonFromDetailPage(self, section: str) -> Person:
@@ -47,15 +48,45 @@ class DetailPage:
     
         # Extract Gender, Firstname, Lastname
         for h2 in section.find_all("h2", id="pphCivilitySnGnText"):
-            # The firstname and lastname are stored inside the "h2" tag
-            name = h2.text.strip().split(" ")
-            person.setGender(name[0])
-            person.setFirstName(name[1])
-            person.setLastName(name[2])
+        # Exemple :
+        #   - Amelie <span class="nameFormat">Chabert</span>
+        #   - Mme Sophie <span class="nameFormat">Zijp Rouzier</span>
+            name = h2
+            
+            last_name = ""
+            first_names = ""
+            gender = ""
+            
+            for content in name.contents:
+                if isinstance(content, str):
+                    text = content.strip()
+                    if not last_name:  # before the name span
+                        # Split the text to separate gender and first names
+                        parts = text.split()
+                        if parts and parts[0] in ("M.", "Mme", "Mr", "Mrs"):
+                            gender = parts[0]
+                            first_names = " ".join(parts[1:])
+                        else:
+                            gender = ""
+                            first_names = text
+                    else:  # after the name span, but since only one span, shouldn't happen
+                        pass
+                elif content.name == 'span' and 'nameFormat' in content.get('class', []):
+                    last_name = content.text.strip()
+            
+            # Set the values
+            person.setGender(gender)
+            person.setLastName(last_name)
+            person.setFirstName(first_names)
 
         # Extract id
         for a in section.find_all("a", id="pphSignetButton"):
             # The id is stored in the "data-source" attribute of the "a" tag
             person.setId(a.get("data-source").strip())
         
+        # Extract function
+        for p in section.find_all("p", id="pphPosteText"):
+            # The function is stored in the text of the "p" tag
+            person.setFunction(p.text.strip())
+
         return person

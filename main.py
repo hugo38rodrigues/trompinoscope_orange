@@ -1,8 +1,6 @@
 import os
-import requests
 import urllib3
 from person import Person
-import time
 import trombinoscope as trombi
 from search_page import SearchPage
 from detail_page import DetailPage
@@ -14,11 +12,11 @@ def extractPersonsFromSearchPages() -> list[Person]:
     personList: list[Person] = []
     
     print("\nLooking into search pages...")
-    for filename in os.listdir("./pages"):
+    for filename in sorted(os.listdir("./pages")):
         if not filename.endswith(".html"):
             continue
 
-        print(f" - Processing file: {filename}")
+        print(f"\n - Processing file: {filename}")
         filepath = os.path.join("./pages", filename)
         searchPage = SearchPage(filepath)
 
@@ -30,11 +28,11 @@ def extractPersonsFromDetailedPages() -> list[Person]:
     personList: list[Person] = []
 
     print("\nLooking into detail pages...")
-    for filename in os.listdir("./detail_pages"):
+    for filename in sorted(os.listdir("./detail_pages")):
         if not filename.endswith(".html"):
             continue
             
-        print(f" - Processing file: {filename}")
+        print(f"\n - Processing file: {filename}")
         filepath = os.path.join("./detail_pages", filename)
         detailPage = DetailPage(filepath)
 
@@ -54,7 +52,6 @@ if __name__ == "__main__":
     print("\nGet photos:")
     for person in personList:
         print(f" - {person}")
-        time.sleep(0.5)         # Limit API calls
         person.savePhoto()
         
     trombi.build_pdf(personList)
