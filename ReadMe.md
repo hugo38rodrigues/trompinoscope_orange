@@ -1,12 +1,12 @@
-# Trombinoscope Orange
+# Trombinoscope
 
-Outil de génération d'un trombinoscope à partir de l'Annuaire Groupe Orange.
+Outil de génération d'un trombinoscope à partir de l'Annuaire.
 Ce script récupère automatiquement les informations des collaborateurs (nom, prénom, photo, fonction, entité) depuis l'annuaire interne.
 
 ## Prérequis
 
 - Python 3.10+
-- Accès au réseau interne Orange (VPN ou poste connecté)
+- Accès au réseau interne entreprise (VPN ou poste connecté)
 - Accès à l'Annuaire Groupe (`annuaire-sec.sso.infra.ftgroup`)
 - Remplir les dossiers 'pages' et 'detailsPages' avec les pages html.
 
@@ -15,7 +15,7 @@ Ce script récupère automatiquement les informations des collaborateurs (nom, p
 1. Cloner le projet :
 ```bash
 git clone <url-du-repo>
-cd trompinoscope_orange
+cd trombinoscope
 ```
 
 2. Créer un environnement virtuel :
@@ -42,7 +42,7 @@ python main.py 1
 
 ## Structure du projet
 ```
-trompinoscope_orange/
+trombinoscope/
 ├── main.py          # Script principal
 ├── photos           # Dossier pour stocker les photos récupérer
 ├── People.py        # Modèle de données People
